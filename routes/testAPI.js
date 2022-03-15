@@ -29,6 +29,8 @@ router.get("/all", (req, res) => {
 });
 router.post("/book", upload.single('imgFile'), (req, res) => {
 	var val = req.body;
+	var collections = val.collection.split(",");
+	console.log(collections);
 	connection.query("INSERT INTO books (title, authors, publisher, publish_date, category, page_count, language, description, image_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
 		val.title,
 		val.authors,
@@ -42,6 +44,18 @@ router.post("/book", upload.single('imgFile'), (req, res) => {
 	], (err, rows, fields) => {
 		if(err) {
 			throw err;
+		} else {
+			var id = rows.insertId;
+			for(let i = 0; i < collections.length; i++) {
+				connection.query("INSERT INTO book_collection (book_id, collection_id) VALUES (?, ?)", [
+					id,
+					collections[i]
+				], (err, rows, fields) => {
+					if(err) {
+						throw err;
+					}
+				});
+			}
 		}
 	});
 });
@@ -52,6 +66,14 @@ router.get("/book/:id", (req, res) => {
 			throw err;
 		}
 		res.send(rows[0]);
+	});
+});
+router.get("/collections", (req, res) => {
+	connection.query("SELECT id, name FROM collections", (err, rows, fields) => {
+		if(err) {
+			throw err;
+		}
+		res.send(rows);
 	});
 });
 module.exports = router;
