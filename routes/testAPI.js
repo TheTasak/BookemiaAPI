@@ -31,7 +31,6 @@ router.get("/collection/:id", (req, res) => {
 router.post("/book", upload.single('imgFile'), (req, res) => {
 	var val = req.body;
 	var collections = val.collection.split(",");
-	console.log(collections);
 	connection.query("INSERT INTO books (title, authors, publisher, publish_date, category, page_count, language, description, image_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
 		val.title,
 		val.authors,
@@ -67,12 +66,11 @@ router.get("/book/:id", (req, res) => {
 			throw err;
 		} else {
 			let object = rows[0];
-			connection.query("SELECT collections.name FROM book_collection INNER JOIN collections ON collections.id=book_collection.collection_id WHERE book_collection.book_id=?", [id], (err, rows, fields) => {
+			connection.query("SELECT collections.name, collections.id FROM book_collection INNER JOIN collections ON collections.id=book_collection.collection_id WHERE book_collection.book_id=?", [id], (err, rows, fields) => {
 				if(err) {
 					throw err;
 				}
-				object.collections = rows.map(collection => collection.name);
-				console.log(object);
+				object.collections = rows;
 				res.send(object);
 			});
 		}
