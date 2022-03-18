@@ -19,8 +19,9 @@ connection.connect(error => {
 	}
 });
 
-router.get("/all", (req, res) => {
-	connection.query("SELECT id, title, authors, image_link FROM books", (err, rows, fields) => {
+router.get("/collection/:id", (req, res) => {
+	const id = req.params.id;
+	connection.query("SELECT b.id, b.title, b.authors, b.image_link FROM books AS b INNER JOIN book_collection ON book_collection.book_id=b.id WHERE book_collection.collection_id=?", [id], (err, rows, fields) => {
 		if(err) {
 			throw err;
 		}
@@ -64,8 +65,17 @@ router.get("/book/:id", (req, res) => {
 	connection.query("SELECT * FROM books WHERE id=?", id, (err, rows, fields) => {
 		if(err) {
 			throw err;
+		} else {
+			let object = rows[0];
+			connection.query("SELECT collections.name FROM book_collection INNER JOIN collections ON collections.id=book_collection.collection_id WHERE book_collection.book_id=?", [id], (err, rows, fields) => {
+				if(err) {
+					throw err;
+				}
+				object.collections = rows.map(collection => collection.name);
+				console.log(object);
+				res.send(object);
+			});
 		}
-		res.send(rows[0]);
 	});
 });
 router.get("/collections", (req, res) => {
